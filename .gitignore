@@ -1,0 +1,18 @@
+# Local configuration and machine-specific paths
+pmon.conf
+
+# User-created profiler archives; keep sample-pmon_total.json tracked
+snapshots/*
+!snapshots/.gitkeep
+
+# Windows helper process state/logs
+.pmon-server.pid
+.pmon-server.*.log
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+
+# OS/editor clutter
+.DS_Store
+.vscode/

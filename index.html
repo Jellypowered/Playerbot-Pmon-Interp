@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PMON Interpreter</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div><span class="eyebrow">AzerothCore • Playerbot profiler</span><h1>PMON Interpreter</h1></div>
+    <div class="actions"><button id="help-button" class="button secondary" type="button">PMON help</button><label class="button secondary">Open external JSON<input id="file-input" type="file" accept=".json,application/json" hidden></label><button id="sample-button" class="button" type="button">Load included sample</button></div>
+  </header>
+  <main>
+    <section id="drop-zone" class="drop-zone" tabindex="0">
+      <div class="upload-icon">↥</div><div><strong>Drop an external <code>pmon*.json</code> here</strong><p>Exports in the server’s configured PMON directory appear in the live snapshot picker below. Uploaded files are only for comparing external captures.</p></div>
+    </section>
+    <section id="empty-state" class="empty-state"><h2>Turn profiler totals into priorities</h2><p>Load a PMON JSON file to see category cost, per-tick budget, slow operations, outliers, and a searchable breakdown.</p></section>
+    <section id="dashboard" hidden>
+      <div id="file-info" class="file-info"></div>
+      <div class="live-snapshot-bar"><label for="live-snapshot-select">PMON files on this server</label><select id="live-snapshot-select"><option value="live">Follow newest live file</option></select><button id="save-snapshot-button" class="button secondary" type="button" title="Copy the selected live PMON export into the configured snapshot archive">Save to snapshots</button><span id="live-snapshot-status">Scanning live PMON directory…</span></div>
+      <nav class="tabs" aria-label="Dashboard views"><button class="tab active" data-tab="overview" type="button">Overview</button><button class="tab" data-tab="compare" type="button">Compare snapshots</button></nav>
+      <div id="overview-tab">
+      <div id="summary-cards" class="cards"></div>
+      <section class="panel explain"><h2>How to read this PMON export</h2><div class="explain-grid"><p><b>Time per tick</b> is category time divided by recorded <code>PlayerbotAIBase::FullTick</code> calls. Use it to rank steady cost per bot update.</p><p><b>Calls / tick</b> follows trigger/value scheduling. High frequency can be intentional: trigger and value check intervals control how often code is evaluated.</p><p><b>FullTick time is cadence, not CPU cost.</b> Its scope is completed at the next <code>UpdateAI</code> call, so use <b>AI time / tick</b> and operation timing for work cost.</p></div></section>
+      <div class="grid two">
+        <section class="panel"><div class="panel-head"><div><h2>Where AI time goes</h2><p id="category-description">Share of recorded <code>UpdateAI</code> timing by category.</p></div></div><div id="category-chart" class="bar-chart"></div></section>
+        <section class="panel"><div class="panel-head"><div><h2>Optimisation queue</h2><p>Largest contributors to average tick work.</p></div><span class="hint">Top 8</span></div><div id="hotspot-chart" class="bar-chart"></div></section>
+      </div>
+      <div class="grid two">
+        <section class="panel"><div class="panel-head"><div><h2>Latency outliers</h2><p>Operations whose worst run is far above their norm.</p></div><span class="hint">max ÷ avg</span></div><div id="outlier-list" class="rank-list"></div></section>
+        <section class="panel"><div class="panel-head"><div><h2>Automatic notes</h2><p>Heuristics to help decide what to investigate first.</p></div></div><ul id="insights" class="insights"></ul></section>
+      </div>
+      <section class="panel table-panel">
+        <div class="panel-head table-head"><div><h2>All recorded operations</h2><p id="row-count"></p></div><div class="controls"><select id="type-filter" aria-label="Filter category"><option value="all">All categories</option></select><input id="search" type="search" placeholder="Filter operation…" aria-label="Filter operation" /><select id="sort-by" aria-label="Sort results"><option value="timePerTick">Time / tick</option><option value="totalTime">Total time</option><option value="avgTime">Average time</option><option value="maxTime">Maximum time</option><option value="count">Calls</option><option value="callsPerTick">Calls / tick</option><option value="percent">AI share</option></select></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Category / operation</th><th><button class="th-help" data-help="total" data-tooltip="Cumulative time during this capture.">Total ⓘ</button></th><th><button id="share-header" class="th-help" data-help="share" data-tooltip="Share of the export's timing scope.">AI share ⓘ</button></th><th><button class="th-help" data-help="tick" data-tooltip="Average cost added by this operation to each full bot tick.">Time / tick ⓘ</button></th><th><button class="th-help" data-help="frequency" data-tooltip="Average number of invocations in each full bot tick.">Calls / tick ⓘ</button></th><th><button class="th-help" data-help="average" data-tooltip="Mean cost of one invocation.">Average ⓘ</button></th><th><button class="th-help" data-help="range" data-tooltip="Fastest and slowest observed invocation.">Min — max ⓘ</button></th><th><button class="th-help" data-help="count" data-tooltip="Number of measured completions.">Calls ⓘ</button></th></tr></thead><tbody id="operation-table"></tbody></table></div>
+      </section>
+      </div>
+      <section id="compare-tab" hidden>
+        <section class="panel compare-intro"><div><h2>Compare two snapshots</h2><p>Lower time values are better: improvements are green and regressions are red. Use captures with comparable bot count, uptime, and activity.</p></div><span id="compare-status" class="hint">Load a baseline and candidate</span></section>
+        <section class="panel"><div class="compare-selectors"><div class="snapshot-picker"><label for="baseline-select">Baseline <span>before / older</span></label><select id="baseline-select"><option value="">Select a snapshot…</option></select><label class="file-picker">Upload baseline<input id="baseline-file" type="file" accept=".json,application/json" hidden></label></div><div class="compare-arrow">→</div><div class="snapshot-picker"><label for="candidate-select">Candidate <span>after / newer</span></label><select id="candidate-select"><option value="current">Current overview snapshot</option></select><label class="file-picker">Upload candidate<input id="candidate-file" type="file" accept=".json,application/json" hidden></label></div><button id="compare-button" class="button" type="button">Compare</button><button id="clear-snapshots" class="button secondary" type="button" title="Reset the snapshot pickers in this browser session. Files on the server are not touched.">Clear snapshots</button></div><p id="compare-note" class="compare-note">Snapshots in <code>pmon-exports/</code> are discovered automatically when using <code>pmon.sh</code>. You can also upload any two JSON files.</p></section>
+        <div id="compare-results" hidden>
+          <div id="compare-cards" class="cards compare-cards"></div>
+          <section class="panel table-panel"><div class="panel-head table-head"><div><h2>Operation deltas</h2><p id="compare-count"></p></div><div class="controls"><select id="compare-type" aria-label="Filter comparison category"><option value="all">All categories</option></select><input id="compare-search" type="search" placeholder="Filter operation…" aria-label="Filter operation" /></div></div><div class="table-wrap"><table><thead><tr><th>Category / operation</th><th>Baseline<br>time / tick</th><th>Candidate<br>time / tick</th><th>Tick delta</th><th>Average delta</th><th>Calls / tick delta</th></tr></thead><tbody id="compare-table"></tbody></table></div></section>
+        </div>
+      </section>
+    </section>
+  </main>
+  <footer>PMON Interpreter · static, self-hosted, dependency-free · click a table row for context</footer>
+  <dialog id="help-dialog" class="help-dialog"><div class="dialog-head"><h2 id="dialog-title">PMON help</h2><button id="dialog-close" class="icon-button" type="button" aria-label="Close">×</button></div><div id="dialog-content" class="dialog-content"></div></dialog>
+  <script src="app.js"></script>
+</body>
+</html>

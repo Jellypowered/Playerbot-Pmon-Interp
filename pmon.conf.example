@@ -1,0 +1,10 @@
+# Copy this file to pmon.conf and adjust paths for your checkout.
+# Relative paths are resolved from the PmonInterp directory.
+[server]
+# Example sibling AzerothCore checkout. Change to your env/dist/bin or LogsDir path.
+pmon_dir = ../azerothcore-wotlk/env/dist/bin
+# Archive created by ./snapshot.sh. Kept separately from the live server output.
+snapshot_dir = snapshots
+bind = 0.0.0.0
+port = 8089
+tmux_session = pmon-interp
