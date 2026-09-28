@@ -1,6 +1,20 @@
 # PMON Interpreter
 
-A self-hosted dashboard for AzerothCore Playerbot PMON JSON exports. It provides an overview, operation-level analysis, and snapshot comparison. It has no build step or third-party runtime dependencies; the dashboard server and UI use Python's standard library and browser APIs.
+A self-hosted dashboard for exploring AzerothCore Playerbot PMON exports. Review timing metrics, investigate costly operations, and compare profiling snapshots. It runs on Python's standard library and browser APIs, with no build step or package installation.
+
+## Screenshots
+
+**Dashboard overview**
+
+![PMON dashboard overview](Screens/Pmon%20Dashboard.png)
+
+**Operation summary and timings**
+
+![PMON operation summary](Screens/Pmon%20Summary.png)
+
+**Snapshot comparison**
+
+![PMON snapshot comparison](Screens/Pmon%20Compare.png)
 
 ## Requirements
 
